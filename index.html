@@ -745,21 +745,18 @@ But for myself, too.</p>
   var TOTAL = slides.length;
   var emailNotificationSent = false;
 
-  // Konfigurasi EmailJS
+  // Konfigurasi EmailJS[cite: 4]
   var SERVICE_ID = 'service_lu50k25';
   var TEMPLATE_ID = 'template_k24zyoe';
 
-// Fungsi Kirim Email Notifikasi saat Amplop Dibuka
+  // 1. Notifikasi Saat Amplop Pertama Kali Dibuka[cite: 4]
   function sendEnvelopeNotification() {
     if (emailNotificationSent) return;
     
     var templateParams = {
-      message: 'Surat interaktif telah dibuka oleh penerima!',
-      time: new Date().toLocaleString('id-ID'),
-      // Menambahkan fallback variabel umum EmailJS
-      to_name: 'Kamu',
-      from_name: 'Penerima Surat',
-      date: new Date().toLocaleString('id-ID')
+      name: 'Penerima Surat',
+      page_number: '1 (Utama)',
+      time_read: new Date().toLocaleString('id-ID')
     };
 
     emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
@@ -771,7 +768,7 @@ But for myself, too.</p>
       });
   }
 
-  // Fungsi Kirim Pesan Balasan dari Slide 22
+  // 2. Notifikasi Kirim Balasan Pesan dari Slide 22[cite: 4]
   function sendReplyMessage() {
     var text = replyText.value.trim();
     if (!text) {
@@ -783,9 +780,9 @@ But for myself, too.</p>
     sendReplyBtn.textContent = 'Mengirim...';
 
     var templateParams = {
-      message: 'BALASAN SURAT:\n\n' + text,
-      time: new Date().toLocaleString('id-ID'),
-      date: new Date().toLocaleString('id-ID')
+      name: 'Penerima Surat (BALASAN)',
+      page_number: '22 - PESAN: "' + text + '"',
+      time_read: new Date().toLocaleString('id-ID')
     };
 
     emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
@@ -823,12 +820,12 @@ But for myself, too.</p>
     updateNav();
   }
 
-  /* Buka Amplop saat diklik */
+  /* Buka Amplop saat diklik[cite: 4] */
   envelopeBtn.addEventListener('click', function(){
     envelopeBtn.classList.add('open');
     bgm.play().catch(function(){});
     
-    // Panggil fungsi notifikasi email
+    // Kirim Notifikasi Email[cite: 4]
     sendEnvelopeNotification();
 
     setTimeout(function(){
@@ -836,7 +833,7 @@ But for myself, too.</p>
     }, 350);
   });
 
-  /* Tutup Modal */
+  /* Tutup Modal[cite: 4] */
   closeModalBtn.addEventListener('click', function(){
     letterModal.classList.remove('active');
     setTimeout(function(){
