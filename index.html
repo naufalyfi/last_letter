@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Last Letter For You — Pineapple Cute Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Poppins:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-coconut:#FAF8F5;
+  --card-white:#FFFFFF;
+  --pineapple-yellow:#FFF59D;
+  --pineapple-gold:#FBBF24;
+  --tropical-teal:#1B7F7A;
+  --teal-deep:#14625E;
+  --coral-pink:#FF9EAA;
+  --coral-warm:#FF8A5B;
+  --text-dark:#2D3748;
+  --text-muted:#718096;
+  --card-border:#2D3748;
+  
+  --serif:'Poppins', sans-serif;
+  --display:'Fredoka', cursive;
+  --mono:'IBM Plex Mono', monospace;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  color:var(--text-dark);
+  font-family:var(--serif);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  background-color:var(--bg-coconut);
+  background-image: radial-gradient(rgba(251, 191, 36, 0.25) 1.5px, transparent 1.5px);
+  background-size: 20px 20px;
+}
+::selection{background:var(--pineapple-gold);color:#fff;}
+
+#field{position:fixed;inset:0;z-index:0;pointer-events:none;}
+#field canvas{position:absolute;inset:0;width:100%;height:100%;}
+.vignette{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 45%, transparent 50%, rgba(251,191,36,.08) 100%);
+}
+
+.progress-track{position:fixed;top:0;left:0;right:0;height:6px;z-index:30;background:#E2E8F0;}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg, var(--tropical-teal), var(--pineapple-gold));transition:width .55s cubic-bezier(.3,.7,.2,1);}
+
+/* PLAYER BGM */
+.player{
+  position:fixed;top:18px;right:16px;z-index:25;
+  display:flex;align-items:center;gap:.6rem;
+  background:var(--card-white);border:2.5px solid var(--card-border);
+  padding:.4rem .6rem;border-radius:40px;
+  cursor:pointer;user-select:none;
+  transition:border-color .3s ease, padding .3s ease, max-width .3s ease;
+  max-width:48px;overflow:hidden;
+  box-shadow:0 6px 0px var(--card-border);
+}
+.player:hover,.player:focus-visible{max-width:240px;padding:.4rem .9rem .4rem .6rem;}
+.pineapple-icon{position:relative;width:28px;height:28px;flex-shrink:0;}
+.pineapple-icon svg{width:100%;height:100%;}
+.flame{transform-origin:center;animation:playerBounce 1.8s ease-in-out infinite;}
+.player.paused .flame{animation-play-state:paused;opacity:.5;}
+@keyframes playerBounce{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-2px) rotate(4deg)}}
+.player-text{display:flex;flex-direction:column;line-height:1.2;white-space:nowrap;}
+.player-text .t1{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--tropical-teal);text-transform:uppercase;font-weight:600;}
+.player-text .t2{font-family:var(--serif);font-size:12px;color:var(--text-dark);font-weight:600;}
+
+/* STAGE & SLIDES */
+.stage{position:fixed;left:0;right:0;top:4px;bottom:82px;z-index:2;}
+.slide{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  padding:1.4rem 1.3rem;opacity:0;pointer-events:none;transition:opacity .25s ease;
+}
+.slide.active{opacity:1;pointer-events:auto;}
+.slide:not(.active) .scene *{animation-play-state:paused;}
+
+/* CARD STYLING KAWAII */
+.card{
+  width:100%;max-width:500px;max-height:min(76vh,580px);overflow-y:auto;
+  background:var(--card-white);border:3px solid var(--card-border);border-radius:32px;
+  padding:2.2rem 2rem 2.4rem;text-align:center;position:relative;
+  scrollbar-width:thin;scrollbar-color:var(--pineapple-gold) transparent;
+  box-shadow:0 12px 0px rgba(45,55,72,0.15), 0 20px 30px rgba(0,0,0,0.05);
+}
+.card::-webkit-scrollbar{width:6px;}
+.card::-webkit-scrollbar-thumb{background:var(--pineapple-gold);border-radius:3px;}
+
+/* DEKORASI HEART STICKER PADA CARD */
+.card::before{
+  content:'♥';position:absolute;top:16px;right:20px;
+  font-size:22px;color:var(--coral-pink);transform:rotate(12deg);
+}
+.card::after{
+  content:'♥';position:absolute;bottom:16px;left:20px;
+  font-size:18px;color:var(--pineapple-gold);transform:rotate(-15deg);
+}
+
+.scene{width:160px;height:120px;margin:0 auto .6rem;position:relative;}
+.scene svg{width:100%;height:100%;display:block;position:relative;}
+
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--tropical-teal);font-weight:600;margin:0 0 0.8rem;}
+.title{font-family:var(--display);font-weight:700;color:var(--text-dark);
+  font-size:clamp(1.5rem,4.4vw,1.85rem);line-height:1.2;margin:0 0 .8rem;}
+#slide-0 .title{font-size:clamp(1.9rem,6vw,2.5rem);color:var(--text-dark);}
+.rule{width:60px;height:4px;margin:0 auto 1.1rem;border-radius:4px;background:linear-gradient(90deg,var(--pineapple-gold),var(--coral-pink));}
+.sub,.body{font-size:clamp(14.5px,2vw,16px);line-height:1.75;color:var(--text-dark);margin:0;font-weight:400;}
+.sub{color:var(--text-muted);}
+.body b, .body strong{color:var(--tropical-teal);font-weight:600;font-family:var(--display);}
+
+/* NAVBAR */
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;height:82px;
+  padding:0 1.2rem calc(.4rem + env(safe-area-inset-bottom,0px));
+  display:flex;align-items:center;justify-content:space-between;gap:.8rem;
+  background:rgba(250,248,245,.95);backdrop-filter:blur(12px);
+  border-top:2.5px solid var(--card-border);
+}
+.nav-btn{
+  font-family:var(--display);font-size:15px;font-weight:600;border-radius:30px;cursor:pointer;
+  border:2.5px solid var(--card-border);padding:.65rem 1.4rem;
+  display:inline-flex;align-items:center;gap:.4rem;
+  transform:scale(1);transition:all .15s ease;
+  -webkit-tap-highlight-color:transparent;
+  box-shadow:0 4px 0px var(--card-border);
+}
+.nav-btn.ghost{background:var(--card-white);color:var(--text-dark);}
+.nav-btn.ghost:hover{background:var(--pineapple-yellow);}
+.nav-btn.primary{background:var(--tropical-teal);color:#fff;}
+.nav-btn.primary:hover{background:var(--teal-deep);}
+.nav-btn:active{transform:translateY(3px);box-shadow:0 1px 0px var(--card-border);}
+.nav-btn.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+.counter{font-family:var(--mono);font-size:11.5px;color:var(--text-muted);font-weight:600;letter-spacing:.04em;white-space:nowrap;}
+
+.spark{position:fixed;border-radius:50%;pointer-events:none;z-index:40;}
+.juice-drop{position:fixed;pointer-events:none;z-index:40;}
+
+.veil-circle{
+  position:fixed;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;
+  background:radial-gradient(circle, var(--pineapple-gold) 0%, var(--pineapple-yellow) 50%, var(--tropical-teal) 100%);
+  transform:scale(0);opacity:.95;z-index:60;pointer-events:none;
+  transition:transform .58s cubic-bezier(.16,.84,.24,1), opacity .5s ease;
+  will-change:transform,opacity;
+}
+.veil-circle.grow{transform:scale(var(--scale,12));}
+.veil-circle.fade{opacity:0;}
+
+.floating-pineapple{
+  position:fixed;z-index:3;pointer-events:none;user-select:none;
+  filter:drop-shadow(0 6px 0px rgba(45,55,72,0.1));
+}
+
+.card .stagger{opacity:0;transform:translateY(10px);transition:opacity .6s ease, transform .6s ease;}
+.slide.active .card .stagger{opacity:1;transform:translateY(0);}
+.card .stagger:nth-child(1){transition-delay:.05s;}
+.card .stagger:nth-child(2){transition-delay:.12s;}
+.card .stagger:nth-child(3){transition-delay:.19s;}
+.card .stagger:nth-child(4){transition-delay:.26s;}
+.card .stagger:nth-child(5){transition-delay:.33s;}
+
+/* ANIMASI IKON */
+.kfBob{animation:bob 3.8s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+.kfBobSlow{animation:bob 5.2s ease-in-out infinite;}
+.kfPulse{animation:pulseGlow 2.4s ease-in-out infinite;transform-origin:center;}
+@keyframes pulseGlow{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.kfFloat{animation:floatUp 3s ease-in-out infinite;}
+@keyframes floatUp{0%{transform:translateY(6px);opacity:.3}50%{opacity:1}100%{transform:translateY(-12px);opacity:0}}
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;}
+
+@media (max-width:480px){
+  .card{padding:1.8rem 1.4rem 2rem;}
+  .navbar{height:76px;}
+  .stage{bottom:76px;}
+}
+</style>
+</head>
+<body>
+
+<h1 class="sr-only">Last Letter For You — Pineapple Cute Edition</h1>
+
+<div id="field" aria-hidden="true"><canvas id="particles"></canvas></div>
+<div id="mascots" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
+<div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+
+<div class="player" id="player" role="button" tabindex="0" aria-label="Play or pause background music">
+  <div class="pineapple-icon">
+    <!-- SVG Nanas Presisi Referensi -->
+    <svg viewBox="0 0 60 75" fill="none" class="flame">
+      <path d="M30 18 C22 8 12 10 8 2 C16 12 24 16 26 22" fill="#1B7F7A" stroke="#2D3748" stroke-width="2"/>
+      <path d="M30 18 C30 6 30 2 30 -2 C30 6 30 10 30 18" stroke="#1B7F7A" stroke-width="3" stroke-linecap="round"/>
+      <path d="M30 18 C38 8 48 10 52 2 C44 12 36 16 34 22" fill="#1B7F7A" stroke="#2D3748" stroke-width="2"/>
+      <rect x="12" y="20" width="36" height="46" rx="18" fill="#FBBF24" stroke="#2D3748" stroke-width="2.5"/>
+      <circle cx="23" cy="38" r="2.5" fill="#2D3748"/>
+      <circle cx="37" cy="38" r="2.5" fill="#2D3748"/>
+      <circle cx="18" cy="43" r="3" fill="#FF9EAA"/>
+      <circle cx="42" cy="43" r="3" fill="#FF9EAA"/>
+      <path d="M26 45 Q30 49 34 45" stroke="#2D3748" stroke-width="2" stroke-linecap="round" fill="none"/>
+    </svg>
+  </div>
+  <div class="player-text">
+    <span class="t1" id="playerState">playing</span>
+    <span class="t2">Glue Song — beabadoobee</span>
+  </div>
+</div>
+
+<main class="stage" id="stage">
+
+<!-- SLIDE 0 -->
+<section class="slide active" data-i="0" id="slide-0">
+  <div class="card">
+    <p class="eyebrow stagger">a letter, unsent until now 🍍</p>
+    <div class="scene stagger" aria-hidden="true">
+      <svg viewBox="0 0 160 120">
+        <!-- Maskot Nanas Utama Bergaya Referensi Gambar -->
+        <g class="kfBob" transform="translate(80 55)">
+          <!-- Mahkota Daun Lapis 3 -->
+          <path d="M0 -30 C-10 -48 -24 -40 -28 -50 C-18 -32 -8 -22 0 -18 C8 -22 18 -32 28 -50 C24 -40 10 -48 0 -30 Z" fill="#1B7F7A" stroke="#2D3748" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M0 -22 C-6 -38 -16 -32 -20 -40 C-12 -26 -4 -18 0 -14 C4 -18 12 -26 20 -40 C16 -32 6 -38 0 -22 Z" fill="#26A69A" stroke="#2D3748" stroke-width="2"/>
+          <!-- Badan Nanas Empuk -->
+          <rect x="-28" y="-12" width="56" height="64" rx="26" fill="#FBBF24" stroke="#2D3748" stroke-width="3"/>
+          <!-- Tekstur Garis Silang -->
+          <path d="M-18 8 L18 40 M18 8 L-18 40" stroke="#F59E0B" stroke-width="2" stroke-dasharray="4 3"/>
+          <!-- Wajah Kawaii -->
+          <circle cx="-11" cy="12" r="3.5" fill="#2D3748"/>
+          <circle cx="11" cy="12" r="3.5" fill="#2D3748"/>
+          <circle cx="-18" cy="18" r="4" fill="#FF9EAA"/>
+          <circle cx="18" cy="18" r="4" fill="#FF9EAA"/>
+          <path d="M-6 20 Q0 26 6 20" stroke="#2D3748" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Tangan Imut Terbuka -->
+          <path d="M-28 20 C-36 16 -38 26 -30 28" fill="#FBBF24" stroke="#2D3748" stroke-width="2.5"/>
+          <path d="M28 20 C36 16 38 26 30 28" fill="#FBBF24" stroke="#2D3748" stroke-width="2.5"/>
+        </g>
+      </svg>
+    </div>
+    <h1 class="title stagger">Last Letter For You</h1>
+    <div class="rule stagger"></div>
+    <p class="sub stagger">Twenty-two pages. One goodbye. Written somewhere between Cikarang and everything I never said.</p>
+  </div>
+</section>
+
+<!-- SLIDE 1 -->
+<section class="slide" data-i="1" id="slide-1">
+  <div class="card">
+    <div class="scene stagger" aria-hidden="true">
+      <svg viewBox="0 0 160 100">
+        <!-- Surat Sampul Nanas Meterai -->
+        <g class="kfPulse" transform="translate(80 50)">
+          <rect x="-40" y="-25" width="80" height="50" rx="8" fill="#FFF59D" stroke="#2D3748" stroke-width="2.5"/>
+          <path d="M-40 -25 L0 8 L40 -25" fill="none" stroke="#2D3748" stroke-width="2"/>
+          <circle cx="0" cy="8" r="10" fill="#FF9EAA" stroke="#2D3748" stroke-width="2"/>
+          <!-- Nanas Kecil di Meterai -->
+          <rect x="-4" y="2" width="8" height="12" rx="4" fill="#FBBF24"/>
+          <path d="M0 2 L-3 -2 M0 2 L3 -2" stroke="#1B7F7A" stroke-width="1.5"/>
+        </g>
+      </svg>
+    </div>
+    <h2 class="title stagger">To You</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">This might be the last letter I ever send you. I don't know if you'll read to the end, or write back — maybe that was never the point. I only wanted to say what's been sitting, unfinished, inside me.</p>
+  </div>
+</section>
+
+<!-- SLIDE 2 -->
+<section class="slide" data-i="2" id="slide-2">
+  <div class="card">
+    <div class="scene stagger" aria-hidden="true">
+      <svg viewBox="0 0 160 100">
+        <!-- Confetti & Stiker Ramai -->
+        <g class="kfFloat" transform="translate(80 50)">
+          <circle cx="-30" cy="-20" r="5" fill="#FF9EAA"/>
+          <rect x="25" y="-30" width="8" height="8" rx="2" fill="#FBBF24" transform="rotate(20)"/>
+          <polygon points="0,-25 5,-15 -5,-15" fill="#1B7F7A"/>
+          <circle cx="35" cy="15" r="4" fill="#FF8A5B"/>
+          <rect x="-35" y="10" width="7" height="7" rx="1" fill="#FFF59D" transform="rotate(-15)"/>
+        </g>
+      </svg>
+    </div>
+    <h2 class="title stagger">Everything I Never Said</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">If we hadn't drifted apart, I'd probably still be talking your ear off — small stories, saved-up questions, things too ordinary for anyone but you. Losing you meant losing the one place I kept my stories.</p>
+  </div>
+</section>
+
+<!-- SLIDE SLIDE SISANYA KONTEN TETAP -->
+<section class="slide" data-i="3" id="slide-3">
+  <div class="card">
+    <div class="scene stagger" aria-hidden="true">
+      <svg viewBox="0 0 160 100">
+        <path d="M10 60 Q 80 80 150 50" fill="none" stroke="#718096" stroke-width="2" stroke-dasharray="4 6"/>
+        <g class="kfBob" transform="translate(120 45)">
+          <rect x="-12" y="-15" width="24" height="30" rx="10" fill="#FBBF24" stroke="#2D3748" stroke-width="2"/>
+          <path d="M0 -15 L-5 -22 M0 -15 L5 -22" stroke="#1B7F7A" stroke-width="2"/>
+        </g>
+      </svg>
+    </div>
+    <h2 class="title stagger">News From Cikarang</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">I'm in Cikarang now — arrived Friday the 14th. Internship starts in Cimahi on the 29th. I would've texted you all of this without thinking twice. Now I can only write it here.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="4" id="slide-4">
+  <div class="card">
+    <h2 class="title stagger">Life Goes On</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">I don't know if you still want to know how I'm doing — but I want you to, anyway. I'm okay. Learning things, meeting people, slowly building something again.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="5" id="slide-5">
+  <div class="card">
+    <h2 class="title stagger">I Still Miss You</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">My heart says come back — older, gentler, understanding each other better this time. My mind says this ending was right for you. I'm still caught between the two.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="6" id="slide-6">
+  <div class="card">
+    <h2 class="title stagger">Why We Ended</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">No one came between us. It was me — too careless, too slow to notice what you carried. Things I should have understood before it was too late to matter.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="7" id="slide-7">
+  <div class="card">
+    <h2 class="title stagger">If Only</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">If only I'd understood sooner.<br>If only I'd paid attention.<br>If only I'd woken up in time.<br><br>Maybe we'd still be together. But we can't go back.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="8" id="slide-8">
+  <div class="card">
+    <h2 class="title stagger">The Regret That Stays</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">Some regrets never fully leave — they stay in a small corner of me. But I don't want to live by blaming myself. I want to learn to notice someone before they're gone.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="9" id="slide-9">
+  <div class="card">
+    <h2 class="title stagger">A Grain Of Sand</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">I once said love doesn't disappear, even shrunk to one grain of sand against the whole universe. I still love you. Some part of that will probably always stay.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="10" id="slide-10">
+  <div class="card">
+    <h2 class="title stagger">Why I Blocked You</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">Not hatred — not even close. I just know myself. I don't know how deep it would cut to see you happy with someone else, so I chose not to look.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="11" id="slide-11">
+  <div class="card">
+    <h2 class="title stagger">Not A Punishment</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">This isn't to punish you, or make you chase me. I'm saving myself. I'll keep one small path open — through email — just in case life brings us somewhere better.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="12" id="slide-12">
+  <div class="card">
+    <h2 class="title stagger">If You Ever Come Back</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">I don't know if I could turn you away. Some part of my heart would still open that door. But I won't wait. If life brings us back, we'll see what happens then.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="13" id="slide-13">
+  <div class="card">
+    <h2 class="title stagger">Not Just Friends</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">I can't pretend we're ordinary friends. We loved each other — forcing anything less would feel like lying to my own heart.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="14" id="slide-14">
+  <div class="card">
+    <h2 class="title stagger">All Or Nothing</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">If we come back, I want you back fully — truly mine again. If that never happens, that's alright too. Better strangers than something we can't really live in.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="15" id="slide-15">
+  <div class="card">
+    <h2 class="title stagger">For You And Him</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">The hardest thing to write: I hope you're happy. I hope he understands the small things about you I failed to. I hope he treats you better than I did.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="16" id="slide-16">
+  <div class="card">
+    <h2 class="title stagger">Your Happiness</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">I hope he loves you better than I ever could — not because I've stopped caring, but because I still do. I just want you truly happy.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="17" id="slide-17">
+  <div class="card">
+    <h2 class="title stagger">Not Hoping He Leaves</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">I don't wish for him to leave. I hope the opposite — that he stays, that you find what you're looking for. Real love doesn't hope for someone else's happiness to fall apart.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="18" id="slide-18">
+  <div class="card">
+    <h2 class="title stagger">If Life Brings Us Back</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">Maybe someday we'll find out if there's still something worth fighting for. For now, I won't wait around. I'll live my life. You should live yours.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="19" id="slide-19">
+  <div class="card">
+    <h2 class="title stagger">I'm Sorry</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">Sorry for not being attentive enough. Sorry I only understood after it ended. I can't change the past — but I'll carry what this taught me and become someone better.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="20" id="slide-20">
+  <div class="card">
+    <h2 class="title stagger">Thank You</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">Thank you for being part of my life, for every story we shared, for once mattering so much. I won't erase these memories — I'll just learn not to live inside them.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="21" id="slide-21">
+  <div class="card">
+    <h2 class="title stagger">If I Become A Stranger</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">I hope you don't remember me only for my mistakes. I hope you remember someone who loved you completely, who only ever wanted your happiness.</p>
+  </div>
+</section>
+
+<section class="slide" data-i="22" id="slide-22">
+  <div class="card">
+    <div class="scene stagger" aria-hidden="true">
+      <svg viewBox="0 0 160 120">
+        <!-- Maskot Berdua Seperti Halaman 4 Contoh -->
+        <g class="kfBob" transform="translate(80 50)">
+          <!-- Nanas Bawah -->
+          <rect x="-20" y="0" width="40" height="42" rx="18" fill="#FBBF24" stroke="#2D3748" stroke-width="2.5"/>
+          <circle cx="-8" cy="18" r="2.5" fill="#2D3748"/>
+          <circle cx="8" cy="18" r="2.5" fill="#2D3748"/>
+          <circle cx="-12" cy="22" r="3" fill="#FF9EAA"/>
+          <circle cx="12" cy="22" r="3" fill="#FF9EAA"/>
+          <path d="M-4 24 Q0 28 4 24" stroke="#2D3748" stroke-width="2" stroke-linecap="round" fill="none"/>
+          
+          <!-- Nanas Atas Tumpuk -->
+          <rect x="-16" y="-32" width="32" height="36" rx="15" fill="#FBBF24" stroke="#2D3748" stroke-width="2.5"/>
+          <path d="M0 -32 C-6 -44 -14 -38 -16 -44 C-10 -32 0 -22 0 -22 Z" fill="#1B7F7A" stroke="#2D3748" stroke-width="2"/>
+          <circle cx="-6" cy="-16" r="2" fill="#2D3748"/>
+          <circle cx="6" cy="-16" r="2" fill="#2D3748"/>
+          <path d="M-3 -11 Q0 -8 3 -11" stroke="#2D3748" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+        </g>
+      </svg>
+    </div>
+    <h2 class="title stagger">Goodbye</h2>
+    <div class="rule stagger"></div>
+    <p class="body stagger">Take care of yourself. Find your happiness. I loved you so much. I still love you — and some small part of that will probably always remain.<br><br>I hope you're happy.<br>— Me</p>
+  </div>
+</section>
+
+</main>
+
+<nav class="navbar">
+  <button class="nav-btn ghost hidden" id="prevBtn" type="button">&larr; Back</button>
+  <span class="counter" id="counter"></span>
+  <button class="nav-btn primary" id="nextBtn" type="button">Begin reading</button>
+</nav>
+
+<audio id="bgm" loop preload="auto" src="song.mp3"></audio>
+
+<script>
+/* PARTIKEL & MASCOT HOVER INIETION */
+(function(){
+  var canvas=document.getElementById('particles');
+  var ctx=canvas.getContext('2d');
+  var w,h,particles=[];
+  function resize(){w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+
+  function drawMiniPineapple(ctx,x,y,size,rot,alpha){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(rot);
+    ctx.globalAlpha=alpha;
+    ctx.beginPath();
+    ctx.ellipse(0,size*.18,size*.62,size*.82,0,0,Math.PI*2);
+    ctx.fillStyle='#FBBF24';
+    ctx.fill();
+    ctx.strokeStyle='#2D3748';
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+    ctx.fillStyle='#1B7F7A';
+    ctx.beginPath();
+    ctx.moveTo(0,-size*.5);ctx.lineTo(-size*.3,-size*.9);ctx.lineTo(size*.3,-size*.9);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  for(var i=0;i<18;i++){
+    particles.push({
+      x:Math.random(),y:Math.random(),
+      r:8+Math.random()*8,
+      speed:.03+Math.random()*.05,
+      phase:Math.random()*Math.PI*2,
+      rotPhase:Math.random()*Math.PI*2,
+      rotSpeed:(Math.random()*.5+.2)*(Math.random()>.5?1:-1)
+    });
+  }
+
+  function tick(t){
+    ctx.clearRect(0,0,w,h);
+    for(var i=0;i<particles.length;i++){
+      var p=particles[i];
+      p.y-=p.speed*.001;
+      p.x+=Math.sin(t*.0002+p.phase)*.00006;
+      if(p.y<-0.05){p.y=1.05;p.x=Math.random();}
+      var px=p.x*w, py=p.y*h;
+      var rot=Math.sin(t*.0006*p.rotSpeed+p.rotPhase)*.4;
+      var alpha=.3+.2*Math.abs(Math.sin(t*.0008+p.phase*2));
+      drawMiniPineapple(ctx,px,py,p.r,rot,alpha);
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+
+/* DEKORASI FLOATING MASCOT SUB-ELEMENTS */
+(function(){
+  var wrap=document.getElementById('mascots');
+  if(!wrap)return;
+  var svgPineapple='<svg viewBox="0 0 60 75" width="100%" height="100%">'+
+    '<rect x="12" y="20" width="36" height="46" rx="18" fill="#FBBF24" stroke="#2D3748" stroke-width="2.5"/>'+
+    '<path d="M30 18 C22 8 12 10 8 2 M30 18 C38 8 48 10 52 2" stroke="#1B7F7A" stroke-width="3" stroke-linecap="round"/>'+
+    '<circle cx="23" cy="38" r="2.5" fill="#2D3748"/>'+
+    '<circle cx="37" cy="38" r="2.5" fill="#2D3748"/>'+
+    '<circle cx="18" cy="43" r="3" fill="#FF9EAA"/>'+
+    '<circle cx="42" cy="43" r="3" fill="#FF9EAA"/>'+
+    '<path d="M26 45 Q30 49 34 45" stroke="#2D3748" stroke-width="2" stroke-linecap="round" fill="none"/>'+
+    '</svg>';
+  var spots=[
+    {top:'6%',left:'4%',size:50,delay:'0s'},
+    {top:'65%',left:'88%',size:58,delay:'.8s'},
+    {top:'82%',left:'5%',size:42,delay:'1.5s'},
+    {top:'12%',left:'86%',size:44,delay:'.3s'}
+  ];
+  spots.forEach(function(s){
+    var el=document.createElement('div');
+    el.className='floating-pineapple kfBob';
+    el.style.top=s.top;el.style.left=s.left;
+    el.style.width=s.size+'px';el.style.height=s.size*1.2+'px';
+    el.style.animationDelay=s.delay;
+    el.innerHTML=svgPineapple;
+    wrap.appendChild(el);
+  });
+})();
+
+/* CORE NAVIGATION LOGIC */
+(function(){
+  var TOTAL=23;
+  var currentIndex=0;
+  var stage=document.getElementById('stage');
+  var slides=Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var prevBtn=document.getElementById('prevBtn');
+  var nextBtn=document.getElementById('nextBtn');
+  var counter=document.getElementById('counter');
+  var progressFill=document.getElementById('progressFill');
+  var bgm=document.getElementById('bgm');
+  var player=document.getElementById('player');
+  var playerState=document.getElementById('playerState');
+
+  function updateNav(){
+    progressFill.style.width=(currentIndex/(TOTAL-1)*100)+'%';
+    if(currentIndex===0){
+      prevBtn.classList.add('hidden');
+      counter.textContent='';
+      nextBtn.textContent='Begin reading';
+    }else if(currentIndex===TOTAL-1){
+      prevBtn.classList.remove('hidden');
+      counter.textContent='Letter '+currentIndex+' of '+(TOTAL-1);
+      nextBtn.textContent='Read again';
+    }else{
+      prevBtn.classList.remove('hidden');
+      counter.textContent='Letter '+currentIndex+' of '+(TOTAL-1);
+      nextBtn.textContent='Next';
+    }
+  }
+
+  function swapTo(idx){
+    slides[currentIndex].classList.remove('active');
+    currentIndex=idx;
+    slides[currentIndex].classList.add('active');
+    updateNav();
+    stage.scrollTop=0;
+  }
+
+  nextBtn.addEventListener('click',function(){
+    var target=currentIndex>=TOTAL-1?0:currentIndex+1;
+    swapTo(target);
+  });
+  prevBtn.addEventListener('click',function(){
+    if(currentIndex>0) swapTo(currentIndex-1);
+  });
+
+  player.addEventListener('click',function(){
+    if(bgm.paused){bgm.play();playerState.textContent='playing';}
+    else{bgm.pause();playerState.textContent='paused';}
+  });
+
+  updateNav();
+})();
+</script>
+
+</body>
+</html>
