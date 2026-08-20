@@ -749,13 +749,17 @@ But for myself, too.</p>
   var SERVICE_ID = 'service_lu50k25';
   var TEMPLATE_ID = 'template_k24zyoe';
 
-  // Fungsi Kirim Email Notifikasi saat Amplop Dibuka
+// Fungsi Kirim Email Notifikasi saat Amplop Dibuka
   function sendEnvelopeNotification() {
     if (emailNotificationSent) return;
     
     var templateParams = {
       message: 'Surat interaktif telah dibuka oleh penerima!',
-      time: new Date().toLocaleString('id-ID')
+      time: new Date().toLocaleString('id-ID'),
+      // Menambahkan fallback variabel umum EmailJS
+      to_name: 'Kamu',
+      from_name: 'Penerima Surat',
+      date: new Date().toLocaleString('id-ID')
     };
 
     emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
@@ -779,8 +783,9 @@ But for myself, too.</p>
     sendReplyBtn.textContent = 'Mengirim...';
 
     var templateParams = {
-      message: 'Balasan dari penerima surat:\n\n' + text,
-      time: new Date().toLocaleString('id-ID')
+      message: 'BALASAN SURAT:\n\n' + text,
+      time: new Date().toLocaleString('id-ID'),
+      date: new Date().toLocaleString('id-ID')
     };
 
     emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
